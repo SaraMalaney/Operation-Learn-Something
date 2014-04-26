@@ -1,0 +1,9 @@
+import cv2
+
+im = cv2.imread('hand.png')
+cv2.imshow('test', im)
+
+key = cv2.waitKey(10)
+if key == 27:
+    cv2.destroyWindow(winName)
+    break
