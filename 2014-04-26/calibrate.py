@@ -105,8 +105,7 @@ def calibrate(folderpath):
         writer = csv.writer(csvfile)
         getColourRange(imbgr,writer,"Colour")
 
-    #cam.release()
 
 
 if __name__ == "__main__":
-    calibrate(os.getcwd())
+    calibrate(sys.argv[1])
