@@ -98,6 +98,14 @@ class Point:
 		self.x = x
 		self.y = y
 
+class Upgrade:
+	def __init__(self):
+		self.x = random.randint(0, width)
+		self.y = random.randint(0, height)
+		
+	def draw_upgrade(self, type):
+		cv2.circle(img, (int(self.x), int(self.y)), 25, (0, 0, 0), -1)
+
 class Fly:
 	def __init__(self):
 		#Choose a random value r that is between 0 and the length of the perimeter
@@ -105,6 +113,7 @@ class Fly:
 		#Set velocity of all flies
 		self.v = 10
 		v = self.v
+		self.living = True
 		#Initialize location and velocity based on r
 		if r < width:
 			self.set_loc(r, 0)
@@ -129,23 +138,32 @@ class Fly:
 		self.vx, self.vy = normalize(vx, vy, self.v)
 
 	def draw_fly(self, img):
-		cv2.circle(img, (int(self.x), int(self.y)), 5, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), -1)
+		if self.living:
+			cv2.circle(img, (int(self.x), int(self.y)), 5, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), -1)
+		else:
+			cv2.circle(img, (int(self.x), int(self.y)), 5, (0, 0, 0), -1)
+
 
 	#Update fly location based on last location and velocity
 	def update_loc(self):
+		if self.living:
+			#Reverse velocity if fly hits edge of frame
+			if (self.x + self.vx) <=0 or (self.x + self.vx) >=width:
+				self.vx = -self.vx
+			if (self.y + self.vy) <=0 or (self.y + self.vy) >=height:
+				self.vy = -self.vy
 
-		#Reverse velocity if fly hits edge of frame
-		if (self.x + self.vx) <=0 or (self.x + self.vx) >=width:
-			self.vx = -self.vx
-		if (self.y + self.vy) <=0 or (self.y + self.vy) >=height:
-			self.vy = -self.vy
+			#Update location
+			self.x = self.x + self.vx
+			self.y = self.y + self.vy
 
-		#Update location
-		self.x = self.x + self.vx
-		self.y = self.y + self.vy
-
-		self.swarm()
-		self.wiggle()
+			self.swarm()
+			self.wiggle()
+		else:
+			if (self.y > height):
+				flies.remove(self)
+			self.vy = self.vy + 1
+			self.y = self.y+self.vy
 
 	#Cause fly to curve towards frame centre
 	def swarm(self):
@@ -184,7 +202,7 @@ count = 0
 flies = []
 time_0 = time.clock()
 flies_caught = 0
-rad = 50
+rad = 100
 
 last_num_items = 0
 last_d = 1000
@@ -235,13 +253,13 @@ if __name__ == "__main__":
 
 			if len(hull_centroids) == 2:
 				last_d = np.sqrt(math.pow(hull_centroids[0].x-hull_centroids[1].x, 2)+ math.pow(hull_centroids[0].y-hull_centroids[1].y, 2))
-			elif len(hull_centroids) == 1 and last_d < 111:
+			elif len(hull_centroids) == 1 and last_d < 200:
 				cv2.putText(imbgr, "CLAP!", (hull_centroids[0].x - 20, hull_centroids[0].y), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 5)
 				if len(flies): 
 					for fly in flies:
-						if fly.x < hull_centroids[0].x+rad and fly.x > hull_centroids[0].x-rad and fly.y < hull_centroids[0].y+rad and fly.y > hull_centroids[0].y-rad:
+						if fly.x < hull_centroids[0].x+rad and fly.x > hull_centroids[0].x-rad and fly.y < hull_centroids[0].y+rad and fly.y > hull_centroids[0].y-rad and fly.living:
 							flies_caught += 1
-							flies.remove(fly)
+							fly.living = False
 					
 				last_d = 1000
 			else:
