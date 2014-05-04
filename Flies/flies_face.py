@@ -7,6 +7,10 @@ import math
 import random
 import time
 
+# load the c1assifiers
+haarFace = cv.Load('haarcascade_frontalface_default.xml')
+haarEyes = cv.Load('haarcascade_eye.xml') 
+
 #Start webcam and get camera frame dimensions
 cam = cv2.VideoCapture(0)
 width = int(cam.get(3))
@@ -19,6 +23,25 @@ def get_video():
 #Normalize a 2D vector and multiply by norm_val
 def normalize(x, y, norm_val):
 	return norm_val*x/np.sqrt(math.pow(x,2)+math.pow(y,2)),  norm_val*y/np.sqrt(math.pow(x,2)+math.pow(y,2))
+
+def face_centroid(im):
+	num_eyes = 0
+	eyes_in_face = []
+	actual_eyes = []
+
+	small = cv2.resize(im, (0,0), fx = 0.1, fy = 0.1)
+	imsmall = cv.fromarray(small)
+
+	# running the classifiers
+	storage = cv.CreateMemStorage()
+	detectedFace = cv.HaarDetectObjects(imsmall, haarFace, storage)
+	#detectedEyes = cv.HaarDetectObjects(im, haarEyes, storage)
+
+	if detectedFace:
+		face = detectedFace[0]
+		return 10*int(face[0][0] + 0.5*face[0][2]), 10*int(face[0][1] + 0.5*face[0][3])
+	else:
+		return int(width/2), int(height/2)
 
 class Fly:
 	def __init__(self):
@@ -54,7 +77,7 @@ class Fly:
 		cv2.circle(img, (int(self.x), int(self.y)), 5, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), -1)
 
 	#Update fly location based on last location and velocity
-	def update_loc(self):
+	def update_loc(self, img):
 
 		#Reverse velocity if fly hits edge of frame
 		if (self.x + self.vx) <=0 or (self.x + self.vx) >=width:
@@ -66,17 +89,20 @@ class Fly:
 		self.x = self.x + self.vx
 		self.y = self.y + self.vy
 
-		self.swarm()
+		self.swarm(img)
 		self.wiggle()
 
 	#Cause fly to curve towards frame centre
-	def swarm(self):
+	def swarm(self, img):
 		#Set curvature
 		c = 0.01
 
+		face_x, face_y = face_centroid(img)
+		#cv2.circle(img, (face_x, face_y), 30, (255, 255, 255), -1)
+
 		#may need to check for 0s
-		self.vx += (width/2 - self.x)*c
-		self.vy += (height/2 - self.y)*c
+		self.vx += (face_x - self.x)*c
+		self.vy += (face_y - self.y)*c
 
 		self.vx, self.vy = normalize(self.vx, self.vy, self.v)
 
@@ -123,7 +149,7 @@ if __name__ == "__main__":
 				#Update and draw flies
 				if len(flies): 
 					for fly in flies:
-						fly.update_loc()
+						fly.update_loc(imbgr)
 						fly.draw_fly(imbgr)
 
 				cv2.imshow("Flies",imbgr)

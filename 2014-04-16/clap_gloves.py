@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
 			if len(hull_centroids) == 2:
 				last_d = np.sqrt(math.pow(hull_centroids[0].x-hull_centroids[1].x, 2)+ math.pow(hull_centroids[0].y-hull_centroids[1].y, 2))
-			elif len(hull_centroids) == 1 and last_d < 200:
+			elif len(hull_centroids) == 1 and last_d < 150:
 				cv2.putText(imgray, "CLAP!", (hull_centroids[0].x - 20, hull_centroids[0].y), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 5)
 				last_d = 1000
 			else:
