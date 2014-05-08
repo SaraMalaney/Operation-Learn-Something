@@ -17,6 +17,7 @@ import scipy.stats as stats
 cam = cv2.VideoCapture(0)
 width = int(cam.get(3))
 height = int(cam.get(4))
+v = 10 #velocity of flies
 
 #Retrieve a frame
 def get_video():
@@ -110,9 +111,6 @@ class Fly:
 	def __init__(self):
 		#Choose a random value r that is between 0 and the length of the perimeter
 		r = random.randint(0, 2*width + 2*height)
-		#Set velocity of all flies
-		self.v = 10
-		v = self.v
 		self.living = True
 		#Initialize location and velocity based on r
 		if r < width:
@@ -135,7 +133,7 @@ class Fly:
 
 	#Set fly velocity (normalized)
 	def set_vel(self, vx, vy):
-		self.vx, self.vy = normalize(vx, vy, self.v)
+		self.vx, self.vy = normalize(vx, vy, v)
 
 	def draw_fly(self, img):
 		if self.living:
@@ -174,29 +172,30 @@ class Fly:
 		self.vx += (width/2 - self.x)*c
 		self.vy += (height/2 - self.y)*c
 
-		self.vx, self.vy = normalize(self.vx, self.vy, self.v)
+		self.vx, self.vy = normalize(self.vx, self.vy, v)
 
 	#Cause fly to have a wiggly flying pattern
 	def wiggle(self):
 		randx = 0
 		randy = 0
+		
 		if self.x == 0:
-			randx = random.randint(1, 10)
+			randx = random.randint(1, v)
 		elif self.x == width:
-			randx = random.randint(-10, -1)
+			randx = random.randint(-v, -1)
 		else:
 			while randx == 0:
-				randx = random.randint(-10, 10)
+				randx = random.randint(-v, v)
 
 		if self.y == 0:
-			randy = random.randint(1, 10)
+			randy = random.randint(1, v)
 		elif self.y == height:
-			randy = random.randint(-10, -1)
+			randy = random.randint(-v, -1)
 		else:
 			while randy == 0:
-				randy = random.randint(-10, 10)
+				randy = random.randint(-v, v)
 
-		self.vx, self.vy = normalize(self.vx + 0.75*randx, self.vy + 0.75*randy, self.v)
+		self.vx, self.vy = normalize(self.vx + 0.75*randx, self.vy + 0.75*randy, v)
 
 count = 0
 flies = []
@@ -206,6 +205,9 @@ rad = 100
 
 last_num_items = 0
 last_d = 1000
+
+display_smoosh = 0
+
 
 if __name__ == "__main__":
 	low, high = get_colour(sys.argv[1])
@@ -217,6 +219,10 @@ if __name__ == "__main__":
 			imfilter = inRange(imycrcb, low, high)
 
 			time_now = time.clock()
+
+			if display_smoosh and display_smoosh < 5:
+				cv2.putText(imbgr, "SQUISH!", (smoosh_loc.x, smoosh_loc.y), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 4)
+				display_smoosh += 1
 
 			#New fly every 1 second
 			if time_now - time_0 > 1:
@@ -245,7 +251,7 @@ if __name__ == "__main__":
 				num = len(items)
 				for i in items:
 					hull = get_hull(i)
-					cv2.drawContours(imbgr,[hull],-1,(255,0,0),2)
+					#cv2.drawContours(imbgr,[hull],-1,(255,0,0),2)
 					x,y,w,h = cv2.boundingRect(hull)
 					cx = x+(w/2)
 					cy = y+(h/2)
@@ -254,12 +260,15 @@ if __name__ == "__main__":
 			if len(hull_centroids) == 2:
 				last_d = np.sqrt(math.pow(hull_centroids[0].x-hull_centroids[1].x, 2)+ math.pow(hull_centroids[0].y-hull_centroids[1].y, 2))
 			elif len(hull_centroids) == 1 and last_d < 200:
-				cv2.putText(imbgr, "CLAP!", (hull_centroids[0].x - 20, hull_centroids[0].y), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 5)
+				#cv2.putText(imbgr, "CLAP!", (hull_centroids[0].x - 20, hull_centroids[0].y), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 5)
 				if len(flies): 
 					for fly in flies:
 						if fly.x < hull_centroids[0].x+rad and fly.x > hull_centroids[0].x-rad and fly.y < hull_centroids[0].y+rad and fly.y > hull_centroids[0].y-rad and fly.living:
 							flies_caught += 1
 							fly.living = False
+							#cv2.putText(imbgr, "SQUISH!", (hull_centroids[0].x - 20, hull_centroids[0].y), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 4)
+							smoosh_loc = Point( hull_centroids[0].x - 20, hull_centroids[0].y)
+							display_smoosh = 1
 					
 				last_d = 1000
 			else:

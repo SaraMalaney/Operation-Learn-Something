@@ -15,7 +15,7 @@ haarEyes = cv.Load('haarcascade_eye.xml')
 cam = cv2.VideoCapture(0)
 width = int(cam.get(3))
 height = int(cam.get(4))
-
+v = 10
 #Retrieve a frame
 def get_video():
     return frame_convert.video_cv(freenect.sync_get_video()[0])
@@ -48,8 +48,7 @@ class Fly:
 		#Choose a random value r that is between 0 and the length of the perimeter
 		r = random.randint(0, 2*width + 2*height)
 		#Set velocity of all flies
-		self.v = 10
-		v = self.v
+
 		#Initialize location and velocity based on r
 		if r < width:
 			self.set_loc(r, 0)
@@ -71,7 +70,7 @@ class Fly:
 
 	#Set fly velocity (normalized)
 	def set_vel(self, vx, vy):
-		self.vx, self.vy = normalize(vx, vy, self.v)
+		self.vx, self.vy = normalize(vx, vy, v)
 
 	def draw_fly(self, img):
 		cv2.circle(img, (int(self.x), int(self.y)), 5, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), -1)
@@ -95,7 +94,7 @@ class Fly:
 	#Cause fly to curve towards frame centre
 	def swarm(self, img):
 		#Set curvature
-		c = 0.01
+		c = 0.1
 
 		face_x, face_y = face_centroid(img)
 		#cv2.circle(img, (face_x, face_y), 30, (255, 255, 255), -1)
