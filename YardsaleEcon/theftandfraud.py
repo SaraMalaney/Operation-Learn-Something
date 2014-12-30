@@ -1,4 +1,4 @@
-#Yardsale Economics
+#Theft and Fraud model
 import random
 import sys
 import numpy as np
@@ -15,7 +15,8 @@ def transaction(array):
 	traderBworth = array[traderB]
 
 	#Randomly generate a profit for one trader equal to the loss of the other trader
-	profit = random.randint(0, min(traderAworth, traderBworth))
+	#In this model, the profit is some fraction of the loser's worth
+	profit = random.randint(0, traderBworth)
 	traderAworth += profit
 	traderBworth -= profit
 	array[traderA] = traderAworth
@@ -31,6 +32,9 @@ traders = [100]*int(sys.argv[1])
 for i in range(0,int(sys.argv[2])):
 	traders = transaction(traders)
 
+#Show results
+#print traders
+
 #Calculate percentiles and create histogram data
 percentiles = [sp.percentileofscore(traders, i) for i in traders]
 data = []
@@ -45,8 +49,7 @@ bins = [0,10,20,30,40,50,60,70,80,90,100]
 
 #Plot results as histogram
 plt.hist(data, bins)
-plt.title("Yardsale model of " + str(sys.argv[1]) + " traders after " + str(sys.argv[2]) + " transactions")
+plt.title("Theft-and-fraud model of " + str(sys.argv[1]) + " traders after " + str(sys.argv[2]) + " transactions")
 plt.xlabel("Percentile")
 plt.ylabel("Wealth")
 plt.show()
-
