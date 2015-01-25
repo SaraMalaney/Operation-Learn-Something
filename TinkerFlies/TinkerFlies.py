@@ -96,7 +96,7 @@ escapekey = 27
 continuekey = 32
 tickCount = 0
 currentDisplayer = None
-
+gravity = 1
 #These are set up when the webcam loads (Displayer called with 1 as arg)
 width = 0
 height = 0
@@ -290,7 +290,9 @@ class Displayer:
 			upgrades = []
 			time_0 = time.clock()
 			display_smoosh = 0
-			
+
+			rad = 100
+
 			flies_caught = 0
 			
 			low, high = get_colour("calibration.csv")
@@ -303,7 +305,10 @@ class Displayer:
 		while 1: 
 			if self.type is 1: #webcam loading - already done
 				break
-			fps = round(1/(time.clock()-self.lastFrameTime), 2) #I think time.clock() resets when you break from this for some reason
+			framedivide = time.clock()-self.lastFrameTime
+			if framedivide is 0:
+				framedivide = 1
+			fps = 1/1 #I think time.clock() resets when you break from this for some reason
 			self.lastFrameTime = time.clock()
 			if self.type is 0:
 				self.currentFrame = copy.copy(self.baseFrame)
